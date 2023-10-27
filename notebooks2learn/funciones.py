@@ -5,7 +5,7 @@ from scipy.spatial.transform import Rotation as r
 from contourpy import contour_generator
 
 
-def Tvalues(trans, theta, phi):
+def Tvalues(trans, azimuth, polar):
     """ Calculates the transmission value for any direction in
     spherical coordinates using the equation (5) of Asimov et al.
     (2006) for a especific wavelength ignoring the sample thickness
@@ -16,10 +16,10 @@ def Tvalues(trans, theta, phi):
     trans : a tuple of size 3
         tuple containeing the transmission values along a-axis (Ta),
         b-axis (Tb), and c-axis (Tc). -> (Ta, Tb, Tc)
-    theta : int or float between 0 and pi
-        angle respect to the c-axis in radians
-    phi : int or float between 0 and 2*pi
+    azimuth : int or float between 0 and 2*pi
         angle respect to the a-axis in radians
+    polar : int or float between 0 and pi
+        angle respect to the c-axis in radians
 
     Returns
     -------
@@ -30,9 +30,9 @@ def Tvalues(trans, theta, phi):
     # extract Tx values
     Ta, Tb, Tc = trans
 
-    return Ta * np.cos(phi)**2 * np.sin(theta)**2 + \
-           Tb * np.sin(phi)**2 * np.sin(theta)**2 + \
-           Tc * np.cos(theta)**2
+    return Tb * np.cos(azimuth)**2 * np.sin(polar)**2 + \
+           Ta * np.sin(azimuth)**2 * np.sin(polar)**2 + \
+           Tc * np.cos(polar)**2
 
 
 def sph2cart(r, azimuth, polar=np.deg2rad(90)):
