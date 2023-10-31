@@ -25,6 +25,12 @@ def Tvalues(trans, azimuth, polar):
     -------
     numpy array
         the calculated T values for any given orientation
+
+    Note
+    ----
+    Ta and Tb are interchanged with respect to Asimov's
+    so that Ta is aligned with the x-axis when shifted
+    to Cartesian coordinates.
     """
 
     # extract Tx values
