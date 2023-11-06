@@ -36,8 +36,8 @@ def Tvalues(trans, azimuth, polar):
     # extract Tx values
     Ta, Tb, Tc = trans
 
-    return Tb * np.cos(azimuth)**2 * np.sin(polar)**2 + \
-           Ta * np.sin(azimuth)**2 * np.sin(polar)**2 + \
+    return Ta * np.cos(azimuth)**2 * np.sin(polar)**2 + \
+           Tb * np.sin(azimuth)**2 * np.sin(polar)**2 + \
            Tc * np.cos(polar)**2
 
 
@@ -211,7 +211,7 @@ def extract_XY_section(x, y, z):
     angles = np.degrees(angles) % 360
 
     # Convert angles to the range 0-360 degrees clockwise
-    angles = (90 - angles) % 360
+    #angles = (90 - angles) % 360
 
     # remove figure
     plt.close("all")
@@ -258,6 +258,50 @@ def extract_XY_section_fast(x, y, z):
         'x': coordinates[:, 0],
         'y': coordinates[:, 1],
         'T': T,
+    })
+
+    return df
+
+
+def extract_XY_section_fast2(x, y, z):
+    """ It uses ContourPy to get the values and spherical coordinates
+    of T values within the XY plane.
+
+    Parameters
+    ----------
+    x : _type_
+        _description_
+    y : _type_
+        _description_
+    z : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+
+    # estimate the contour at z=0 (i.e. XY plane)
+    sections = contour_generator(x, y, z)
+
+    # get the vertice coordinates of the contour z=0 (array-like)
+    coordinates = sections.lines(0)[0]
+
+    # get vector lengths (i.e. T values within the XY plane)
+    T = np.linalg.norm(coordinates, axis=1)
+
+    # get the angle of the vector (in radians)
+    angles = np.arctan2(coordinates[:, 1], coordinates[:, 0])
+
+    # Convert angles to the range 0-2π (0-360 degrees)
+    angles = np.degrees(angles) % 360
+
+    df = pd.DataFrame({
+        'x': coordinates[:, 0],
+        'y': coordinates[:, 1],
+        'T': T,
+        'angles': angles
     })
 
     return df
