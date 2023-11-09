@@ -70,6 +70,34 @@ def sph2cart(r, azimuth, polar=np.deg2rad(90)):
     return np.around(x, decimals=6), np.around(y, decimals=6), np.around(z, decimals=6)
 
 
+def cart2sph(x, y, z):
+    """Converts from 3D cartesian to spherical coordinates.
+
+    Parameters
+    ----------
+    x : int, float or array
+        The x-coordinate(s) in Cartesian space.
+    y : int, float or array
+        The y-coordinate(s) in Cartesian space.
+    z : int, float or array
+        The z-coordinate(s) in Cartesian space.
+
+    Returns
+    -------
+    numpy ndarray (1d)
+        An array containing the polar coordinates (r, theta, phi)
+        of the input Cartesian point, where r is the distance from
+        the origin to the point, theta is the polar angle from the
+        positive z-axis, and phi is the azimuthal angle from the
+        positive x-axis (ISO 80000-2:2019).
+    """
+    r = np.sqrt(x**2 + y**2 + z**2)
+    theta = np.arccos(z / r)
+    phi = np.arctan2(y, x)
+
+    return r, phi, theta
+
+
 def regular_S2_grid(n_squared=100, degrees=False):
     """_summary_
 
