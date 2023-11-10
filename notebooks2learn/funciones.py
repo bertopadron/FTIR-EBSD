@@ -85,7 +85,7 @@ def cart2sph(x, y, z):
         Spherical coordinates:
         - r: radial distance,
         - theta: inclination angle (range from 0 to π),
-        - phi: azimuthal angle (range from -π to π).
+        - phi: azimuthal angle (range from π to 2π).
 
     Notes
     -----
@@ -99,8 +99,9 @@ def cart2sph(x, y, z):
     # calculate the inclination - polar angle
     theta = np.arccos(z / r)
     
-    # Calculate the azimuthal angle
+    # Calculate the azimuthal angle ensuring that phi is within [π, 2π)
     phi = np.arctan2(y, x)
+    phi = np.where(phi < 0, phi + 2 * np.pi, phi)
 
     return r, phi, theta
 
