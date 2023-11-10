@@ -67,32 +67,39 @@ def sph2cart(r, azimuth, polar=np.deg2rad(90)):
     y = r * np.sin(polar) * np.sin(azimuth)
     z = r * np.cos(polar)
 
-    return np.around(x, decimals=6), np.around(y, decimals=6), np.around(z, decimals=6)
+    return x, y, z
 
 
 def cart2sph(x, y, z):
-    """Converts from 3D cartesian to spherical coordinates.
+    """Converts 3D rectangular cartesian coordinates to spherical polar
+    coordinates.
 
     Parameters
     ----------
-    x : int, float or array
-        The x-coordinate(s) in Cartesian space.
-    y : int, float or array
-        The y-coordinate(s) in Cartesian space.
-    z : int, float or array
-        The z-coordinate(s) in Cartesian space.
+    x, y, z : float or array_like
+        Cartesian coordinates.
 
     Returns
     -------
-    numpy ndarray (1d)
-        An array containing the polar coordinates (r, theta, phi)
-        of the input Cartesian point, where r is the distance from
-        the origin to the point, theta is the polar angle from the
-        positive z-axis, and phi is the azimuthal angle from the
-        positive x-axis (ISO 80000-2:2019).
+    r, theta, phi : float or array_like
+        Spherical coordinates:
+        - r: radial distance,
+        - theta: inclination angle (range from 0 to π),
+        - phi: azimuthal angle (range from -π to π).
+
+    Notes
+    -----
+    This function follows the ISO 80000-2:2019 norm (physics convention).
+    The input coordinates (x, y, z) are assumed to be in a right-handed
+    Cartesian system. The spherical coordinates are returned in the order
+    (r, theta, phi). The angles theta and phi are in radians.
     """
     r = np.sqrt(x**2 + y**2 + z**2)
+
+    # calculate the inclination - polar angle
     theta = np.arccos(z / r)
+    
+    # Calculate the azimuthal angle
     phi = np.arctan2(y, x)
 
     return r, phi, theta
