@@ -19,7 +19,7 @@ def Tvalues(trans, azimuth, polar):
     azimuth : int or float between 0 and 2*pi
         angle respect to the a-axis in radians
     polar : int or float between 0 and pi
-        angle respect to the c-axis in radians
+        angle respect to the c-axis in radians, i.e. inclination
 
     Returns
     -------
@@ -85,7 +85,7 @@ def cart2sph(x, y, z):
         Spherical coordinates:
         - r: radial distance,
         - theta: inclination angle (range from 0 to π),
-        - phi: azimuthal angle (range from π to 2π).
+        - phi: azimuthal angle (range from 0 to 2π).
 
     Notes
     -----
@@ -99,9 +99,13 @@ def cart2sph(x, y, z):
     # calculate the inclination - polar angle
     theta = np.arccos(z / r)
     
-    # Calculate the azimuthal angle ensuring that phi is within [π, 2π)
+    # Calculate the azimuthal angle ensuring that phi is within [0, 2π)
     phi = np.arctan2(y, x)
     phi = np.where(phi < 0, phi + 2 * np.pi, phi)
+    
+    # if inclination is 0 or 180 set azimuth to 0
+    phi[np.isclose(theta, 0)] = 0
+    phi[np.isclose(theta, np.deg2rad(180))] = 0
 
     return r, phi, theta
 
@@ -365,8 +369,14 @@ def rotate(coordinates, euler_ang):
     -------
     x, y, z = rotate(coordinates=(x, y, z), euler_ang=(30, 0, 40))
     """
-    # create a ndarray to vectorize the rotation operation
-    coordinates = np.dstack(coordinates)
+   
+    # create a ndarray to vectorize the rotation operation (n, x, 3) or (n, 3)
+    if coordinates[0].ndim == 2:
+        coordinates = np.dstack(coordinates)
+    elif coordinates[0].ndim == 1:
+        coordinates = np.vstack(coordinates).T
+    else:
+        print('check array dimension!')
 
     # define a rotation in euler space (Bunge) for intrinsic rotations
     rotation = r.from_euler('zxz', [euler_ang[0], euler_ang[1], euler_ang[2]],
@@ -374,9 +384,12 @@ def rotate(coordinates, euler_ang):
 
     # apply rotation
     new_coordinates = coordinates @ rotation.as_matrix().T
-
-    return new_coordinates[:, :, 0], new_coordinates[:, :, 1], new_coordinates[:, :, 2]
-
+    
+    if coordinates[0].ndim == 2:
+        return new_coordinates[:, :, 0], new_coordinates[:, :, 1], new_coordinates[:, :, 2]
+    else:
+        return new_coordinates[:, 0], new_coordinates[:, 1], new_coordinates[:, 2]
+    
 
 def explore_Euler_space(step=1):
     """Returns a Numpy array with different combinations
