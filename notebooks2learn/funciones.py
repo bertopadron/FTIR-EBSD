@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as r
+from scipy.optimize import minimize, differential_evolution, dual_annealing
 from contourpy import contour_generator
 
 
@@ -425,3 +426,146 @@ def explore_Euler_space(step=1):
 
 def calc_unpol_absorbance(A_max, A_min):
     return -np.log10((10**-A_max + 10**-A_min) / 2)
+
+
+def objective_function(euler_ang, measurements, params):
+    """
+    Objective function to minimize the difference between
+    measured and theoretical T values
+    """
+    # extract variables
+    Ta, Tb, Tc = params
+    T_measured = measurements[:, 0]
+    azimuths = np.deg2rad(measurements[:, 1])
+    polar = np.deg2rad(measurements[:, 2])
+    e1, e2, e3 = euler_ang
+
+    # convert from spherical to cartesian coordinates
+    x, y, z = sph2cart(r=T_measured, azimuth=azimuths, polar=polar)
+    
+    # apply rotation to measures using Eules angles (Bunge convention)
+    # Note that the order of euler angles are inverted and the sign changed
+    x2, y2, z2 = rotate(coordinates=(x, y, z), euler_ang=(-e3, -e2, -e1))
+    
+    # convert back to spherical coordinates
+    T_measured, azimuths, polar = cart2sph(x2.ravel(), y2.ravel(), z2.ravel())
+    
+    # estimate theoretical T values
+    T_theoretical = Tvalues(trans=(Ta, Tb, Tc), azimuth=azimuths, polar=polar)
+
+    return np.sum(np.abs(T_measured - T_theoretical))**2
+
+
+def find_orientation(measurements, params, num_guesses=15, tolerance=None):
+    """
+    Given a set of points in 3D space, determine if they fall on the surface
+    defined by the function T. If the points do not fall on the surface,
+    apply a rotation to the points and check again until the points fall on
+    the surface. Return the Euler angles that rotate the points to the surface.
+
+    Parameters
+    ----------
+    measurements : numpy array
+        The measurements, where each tuple contains (T, azimuths, polar).
+    params : tuple of size 3
+        tuple containing the transmission values along a-axis (Ta),
+        b-axis (Tb), and c-axis (Tc). -> (Ta, Tb, Tc)
+    num_guesses : int
+        Number of initial guesses to try.
+    tolerance : float or None
+        tolerance for determining if a point is on the surface
+
+    Returns
+    -------
+    tuple of size 3
+        tuple containing the Euler angles in degrees for rotating
+        the points to the surface
+    """
+
+    best_result = None
+    best_objective_value = float('inf')
+    bounds = [(0, 90), (0, 180), (0, 90)]
+
+    for _ in range(num_guesses):
+        # Generate a random initial guess within the specified bounds
+        euler_ang = np.around(np.random.uniform([0, 0, 0], [90, 180, 90]), 0)
+        
+        # minimise
+        result = minimize(fun=objective_function,
+                          x0=euler_ang,
+                          args=(measurements, params),
+                          bounds=bounds,
+                          tol=tolerance)
+
+        # Update result if the current one is better
+        if result.fun < best_objective_value:
+            best_objective_value = result.fun
+            best_result = result
+
+    print(f'Best Orientation: {np.around(best_result.x, 1)}')
+    return best_result
+
+
+def find_orientation_diffevol(measurements, params, tolerance=0.01, cpus=1):
+    """_summary_
+
+    http://en.wikipedia.org/wiki/Differential_evolution
+
+    Parameters
+    ----------
+    measurements : _type_
+        _description_
+    params : _type_
+        _description_
+    tolerance : float, optional
+        _description_, by default 0.01
+    """
+    
+
+    bounds = [(0, 90), (0, 180), (0, 90)]
+
+    # Perform global optimization using differential evolution
+    result = differential_evolution(func=objective_function, 
+                                    bounds=bounds,
+                                    args=(measurements, params),
+                                    tol=tolerance,
+                                    workers=cpus)
+    
+    print(f'Best Orientation: {np.around(result.x, 1)}')
+    return result
+
+
+def find_orientation_annealing():
+    pass
+
+
+def find_orientation_bruteforce(measurements, params, step=6):
+    """_summary_
+
+    Parameters
+    ----------
+    measurements : _type_
+        _description_
+    params : _type_
+        _description_
+    step : int, optional
+        _description_, by default 6
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+
+    euler = explore_Euler_space(step)
+    diff = np.empty(euler.shape[0])
+
+    for index, euler_ang in enumerate(euler):
+
+        val = objective_function(euler_ang,
+                                 measurements,
+                                 params=params)
+        diff[index] = val
+
+    return euler[diff.argmin()]
+
