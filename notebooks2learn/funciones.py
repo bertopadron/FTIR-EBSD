@@ -456,7 +456,7 @@ def objective_function(euler_ang, measurements, params):
     return np.sum(np.abs(T_measured - T_theoretical))**2
 
 
-def find_orientation(measurements, params, num_guesses=15, tolerance=None):
+def find_orientation(measurements, params, num_guesses=20, tolerance=None):
     """
     Given a set of points in 3D space, determine if they fall on the surface
     defined by the function T. If the points do not fall on the surface,
@@ -486,11 +486,11 @@ def find_orientation(measurements, params, num_guesses=15, tolerance=None):
     best_objective_value = float('inf')
     bounds = [(0, 90), (0, 180), (0, 90)]
 
-    for _ in range(num_guesses):
-        # Generate a random initial guess within the specified bounds
-        euler_ang = np.around(np.random.uniform([0, 0, 0], [90, 180, 90]), 0)
-        
-        # minimise
+    # Generate initial guesses
+    initial_guesses = np.around(np.random.uniform([0, 0, 0], [90, 180, 90], size=(num_guesses, 3)), 0)
+
+    for euler_ang in initial_guesses:
+        # Minimize
         result = minimize(fun=objective_function,
                           x0=euler_ang,
                           args=(measurements, params),
@@ -502,7 +502,7 @@ def find_orientation(measurements, params, num_guesses=15, tolerance=None):
             best_objective_value = result.fun
             best_result = result
 
-    print(f'Best Orientation: {np.around(best_result.x, 1)}')
+    print(f'Calculated orientation: {np.around(best_result.x, 1)}')
     return best_result
 
 
@@ -531,7 +531,7 @@ def find_orientation_diffevol(measurements, params, tolerance=0.01, cpus=1):
                                     tol=tolerance,
                                     workers=cpus)
     
-    print(f'Best Orientation: {np.around(result.x, 1)}')
+    print(f'Calculated Orientation: {np.around(result.x, 1)}')
     return result
 
 
@@ -567,5 +567,7 @@ def find_orientation_bruteforce(measurements, params, step=6):
                                  params=params)
         diff[index] = val
 
+    print(f'Calculated Orientation: {euler[diff.argmin()]}')
+    print(f'diff = {diff.min()}')
     return euler[diff.argmin()]
 
