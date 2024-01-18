@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+# Import statements
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -5,7 +8,9 @@ from scipy.spatial.transform import Rotation as r
 from scipy.optimize import minimize, differential_evolution, dual_annealing
 from contourpy import contour_generator
 
+# Function definitions
 
+# reference frames and coordinates
 def Tvalues(trans, azimuth, polar):
     """ Calculates the transmission value for any direction in
     spherical coordinates using the equation (5) of Asimov et al.
@@ -571,3 +576,10 @@ def find_orientation_bruteforce(measurements, params, step=6):
     print(f'diff = {diff.min()}')
     return euler[diff.argmin()]
 
+
+if __name__ == '__main__':
+    pass
+else:
+    print('module FTIR v.2024.1.18 imported')
+
+# End of file
