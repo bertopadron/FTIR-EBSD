@@ -130,3 +130,4 @@ dmypy.json
 notebooks2learn/.jupyter/desktop-workspaces/default-37a8.jupyterlab-workspace
 .DS_Store
 docs/.jupyter/desktop-workspaces/default-37a8.jupyterlab-workspace
+*.jupyterlab-workspace
