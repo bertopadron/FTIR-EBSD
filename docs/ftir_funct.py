@@ -223,8 +223,10 @@ def _set_epsilon(n):
 def extract_XY_section(x, y, z):
     """ It uses the matplolib contour function to get the values
     and spherical coordinates of T values within the XY plane.
-    The contour function uses he marching squares algorithm
+    The contour function uses the marching squares algorithm
     to fing the intersection at a defined level.
+
+    Caveat: THIS IS SLOW!
 
     Parameters
     ----------
@@ -397,12 +399,13 @@ def rotate(coordinates, euler_ang):
         return new_coordinates[:, 0], new_coordinates[:, 1], new_coordinates[:, 2]
     
 
-def explore_Euler_space(step=1):
+def explore_Euler_space(step=1, upper_bounds=(90, 180, 90)):
     """Returns a Numpy array with different combinations
     of Euler angles in degrees to explore the Euler space
     based on a defined step size. It assumes a orthorhombic
     symmetry where angles range like this:
 
+    default:
     phi1: 0-90
     theta: 0-180
     phi2: 0-90
@@ -412,10 +415,11 @@ def explore_Euler_space(step=1):
     step : int, optional
         _description_, by default 1
     """
+    ang1, ang2, ang3 = upper_bounds
 
-    phi1 = np.arange(0, 90 + step, step)
-    theta = np.arange(0, 180 + step, step)
-    phi2 = np.arange(0, 90 + step, step)
+    phi1 = np.arange(0, ang1 + step, step)
+    theta = np.arange(0, ang2 + step, step)
+    phi2 = np.arange(0, ang3 + step, step)
 
     # Create a meshgrid of all possible combinations
     phi1, theta, phi2 = np.meshgrid(phi1, theta, phi2, indexing='ij')
@@ -580,6 +584,6 @@ def find_orientation_bruteforce(measurements, params, step=6):
 if __name__ == '__main__':
     pass
 else:
-    print('module FTIR v.2024.1.18 imported')
+    print('module FTIR v.2024.2.19 imported')
 
 # End of file
