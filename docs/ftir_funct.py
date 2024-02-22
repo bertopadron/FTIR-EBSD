@@ -399,21 +399,27 @@ def rotate(coordinates, euler_ang):
         return new_coordinates[:, 0], new_coordinates[:, 1], new_coordinates[:, 2]
     
 
-def explore_Euler_space(step=1, upper_bounds=(90, 180, 90)):
+def explore_Euler_space(step=1, upper_bounds=(90, 90, 180)):
     """Returns a Numpy array with different combinations
     of Euler angles in degrees to explore the Euler space
     based on a defined step size. It assumes a orthorhombic
-    symmetry where angles range like this:
-
-    default:
-    phi1: 0-90
-    theta: 0-180
-    phi2: 0-90
+    symmetry where the Euler angle ranges for the fundamental
+    zone are:
+    varphi1: 0-90
+        Phi: 0-90
+    varphi2: 0-180
 
     Parameters
     ----------
     step : int, optional
-        _description_, by default 1
+        the resolution, by default 1 degree
+    upper_bounds : tuple, optional
+        range of Euler angles, by default (90, 90, 180)
+
+    Returns
+    -------
+    _type_
+        _description_
     """
     ang1, ang2, ang3 = upper_bounds
 
@@ -493,10 +499,10 @@ def find_orientation(measurements, params, num_guesses=20, tolerance=None):
 
     best_result = None
     best_objective_value = float('inf')
-    bounds = [(0, 90), (0, 180), (0, 90)]
+    bounds = [(0, 90), (0, 90), (0, 180)]
 
     # Generate initial guesses
-    initial_guesses = np.around(np.random.uniform([0, 0, 0], [90, 180, 90], size=(num_guesses, 3)), 0)
+    initial_guesses = np.around(np.random.uniform([0, 0, 0], [90, 90, 180], size=(num_guesses, 3)), 0)
 
     for euler_ang in initial_guesses:
         # Minimize
@@ -584,6 +590,6 @@ def find_orientation_bruteforce(measurements, params, step=6):
 if __name__ == '__main__':
     pass
 else:
-    print('module FTIR v.2024.2.19 imported')
+    print('module FTIR v.2024.2.22 imported')
 
 # End of file
