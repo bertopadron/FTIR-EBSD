@@ -355,7 +355,7 @@ def extract_XY_section_fast2(x, y, z):
     return df
 
 
-def rotate(coordinates, euler_ang):
+def rotate(coordinates, euler_ang, invert=False):
     """ Rotate points in 3D cartesian space using the Bunge convention
     in degrees with intrinsic rotation. This is just a wrapper for the
     r.from_euler() Scipy method for convenience
@@ -389,6 +389,9 @@ def rotate(coordinates, euler_ang):
     # define a rotation in euler space (Bunge) for intrinsic rotations
     rotation = r.from_euler('zxz', [euler_ang[0], euler_ang[1], euler_ang[2]],
                             degrees=True)
+    
+    if invert is True:
+        rotation = rotation.inv()
 
     # apply rotation
     new_coordinates = coordinates @ rotation.as_matrix().T
