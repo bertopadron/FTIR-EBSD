@@ -520,7 +520,7 @@ def find_orientation(measurements, params, num_guesses=20, tolerance=None):
             best_objective_value = result.fun
             best_result = result
 
-    print(f'Calculated orientation: {np.around(best_result.x, 1)}')
+    print(f'Calculated orientation: {np.around(best_result.x, 0)}')
     return best_result
 
 
@@ -549,7 +549,7 @@ def find_orientation_diffevol(measurements, params, tolerance=0.01, cpus=1):
                                     tol=tolerance,
                                     workers=cpus)
     
-    print(f'Calculated Orientation: {np.around(result.x, 1)}')
+    print(f'Calculated Orientation: {np.around(result.x, 0)}')
     return result
 
 
@@ -588,6 +588,24 @@ def find_orientation_bruteforce(measurements, params, step=6):
     print(f'Calculated Orientation: {euler[diff.argmin()]}')
     print(f'diff = {diff.min()}')
     return euler[diff.argmin()]
+
+
+def find_nearest(df, values):
+    """find the index of the nearest value in
+    a pandas dataframe
+
+    Parameters
+    ----------
+    df : _type_
+        _description_
+    values : _type_
+        _description_
+    """
+
+    indexes = []
+    for value in values:
+        indexes.append((np.abs(df - value)).idxmin())
+    return indexes
 
 
 if __name__ == '__main__':
