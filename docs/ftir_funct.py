@@ -402,14 +402,14 @@ def rotate(coordinates, euler_ang, invert=False):
         return new_coordinates[:, 0], new_coordinates[:, 1], new_coordinates[:, 2]
     
 
-def explore_Euler_space(step=1, upper_bounds=(90, 90, 180)):
+def explore_Euler_space(step=1, upper_bounds=(90, 89, 180)):
     """Returns a Numpy array with different combinations
     of Euler angles in degrees to explore the Euler space
     based on a defined step size. It assumes a orthorhombic
     symmetry where the Euler angle ranges for the fundamental
     zone are:
     varphi1: 0-90
-        Phi: 0-90
+        Phi: 0.1-89 (this is to avoid Gymbal lock)
     varphi2: 0-180
 
     Parameters
@@ -427,7 +427,7 @@ def explore_Euler_space(step=1, upper_bounds=(90, 90, 180)):
     ang1, ang2, ang3 = upper_bounds
 
     phi1 = np.arange(0, ang1 + step, step)
-    theta = np.arange(0, ang2 + step, step)
+    theta = np.arange(0.1, ang2, step)
     phi2 = np.arange(0, ang3 + step, step)
 
     # Create a meshgrid of all possible combinations
@@ -540,7 +540,7 @@ def find_orientation_diffevol(measurements, params, tolerance=0.01, cpus=1):
     """
     
 
-    bounds = [(0, 90), (0, 180), (0, 90)]
+    bounds = [(0, 90), (0, 90), (0, 180)]
 
     # Perform global optimization using differential evolution
     result = differential_evolution(func=objective_function, 
