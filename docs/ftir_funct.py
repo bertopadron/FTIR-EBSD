@@ -611,6 +611,6 @@ def find_nearest(df, values):
 if __name__ == '__main__':
     pass
 else:
-    print('module FTIR v.2024.2.22 imported')
+    print('module FTIR v.2024.2.28 imported')
 
 # End of file
