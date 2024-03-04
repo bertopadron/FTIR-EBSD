@@ -23,9 +23,9 @@ def Tvalues(trans, azimuth, polar):
         tuple containeing the transmission values along a-axis (Ta),
         b-axis (Tb), and c-axis (Tc). -> (Ta, Tb, Tc)
     azimuth : int or float between 0 and 2*pi
-        angle respect to the a-axis in radians
+        azimuthal angle respect to the a-axis in radians
     polar : int or float between 0 and pi
-        angle respect to the c-axis in radians, i.e. inclination
+        polar angle respect to the c-axis in radians, i.e. inclination
 
     Returns
     -------
@@ -63,9 +63,10 @@ def T_on_plane(trans, azimuth, polar):
     # extract T values
     Ta, Tb, Tc = trans
 
-    return Ta * (np.cos(polar)**2 * np.cos(azimuth)**2 + np.sin(azimuth)**2) + \
-           Tb * (np.cos(polar)**2 * np.sin(azimuth)**2 * np.cos(azimuth)**2) + \
-           Tc * np.sin(polar)**2
+    return 0.5 * \
+        (Ta * (np.cos(polar)**2 * np.cos(azimuth)**2 + np.sin(azimuth)**2) +
+         Tb * (np.cos(polar)**2 * np.sin(azimuth)**2 * np.cos(azimuth)**2) +
+         Tc * np.sin(polar)**2)
 
 
 
