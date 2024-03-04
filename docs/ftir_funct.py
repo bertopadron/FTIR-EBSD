@@ -39,12 +39,35 @@ def Tvalues(trans, azimuth, polar):
     to Cartesian coordinates.
     """
 
-    # extract Tx values
+    # extract T values
     Ta, Tb, Tc = trans
 
     return Ta * np.cos(azimuth)**2 * np.sin(polar)**2 + \
            Tb * np.sin(azimuth)**2 * np.sin(polar)**2 + \
            Tc * np.cos(polar)**2
+
+
+def T_on_plane(trans, azimuth, polar):
+    """_summary_ Based on Sambridge et al.
+
+    Parameters
+    ----------
+    trans : _type_
+        _description_
+    azimuth : _type_
+        _description_
+    polar : _type_
+        _description_
+    """
+
+    # extract T values
+    Ta, Tb, Tc = trans
+
+    return Ta * (np.cos(polar)**2 * np.cos(azimuth)**2 + np.sin(azimuth)**2) + \
+           Tb * (np.cos(polar)**2 * np.sin(azimuth)**2 * np.cos(azimuth)**2) + \
+           Tc * np.sin(polar)**2
+
+
 
 
 def sph2cart(r, azimuth, polar=np.deg2rad(90)):
@@ -611,6 +634,6 @@ def find_nearest(df, values):
 if __name__ == '__main__':
     pass
 else:
-    print('module FTIR v.2024.2.28 imported')
+    print('module FTIR v.2024.3.04 imported')
 
 # End of file
