@@ -426,20 +426,22 @@ def rotate(coordinates, euler_ang, invert=False):
         return new_coordinates[:, 0], new_coordinates[:, 1], new_coordinates[:, 2]
     
 
-def explore_Euler_space(step=1, upper_bounds=(90, 89, 180)):
+def explore_Euler_space(step=1, lower_bounds=(0, 0, 0), upper_bounds=(90, 90, 180)):
     """Returns a Numpy array with different combinations
     of Euler angles in degrees to explore the Euler space
     based on a defined step size. It assumes a orthorhombic
     symmetry where the Euler angle ranges for the fundamental
     zone are:
     varphi1: 0-90
-        Phi: 0.1-89 (this is to avoid Gymbal lock)
+        Phi: 0-90
     varphi2: 0-180
 
     Parameters
     ----------
     step : int, optional
         the resolution, by default 1 degree
+    lower_bounds : tuple, optional
+        range of Euler angles, by default (0, 0, 0)
     upper_bounds : tuple, optional
         range of Euler angles, by default (90, 90, 180)
 
@@ -448,11 +450,12 @@ def explore_Euler_space(step=1, upper_bounds=(90, 89, 180)):
     _type_
         _description_
     """
+    lang1, lang2, lang3 = lower_bounds
     ang1, ang2, ang3 = upper_bounds
 
-    phi1 = np.arange(0, ang1 + step, step)
-    theta = np.arange(0.1, ang2, step)
-    phi2 = np.arange(0, ang3 + step, step)
+    phi1 = np.arange(lang1, ang1 + 1, step)
+    theta = np.arange(lang2, ang2 + 1, step)
+    phi2 = np.arange(lang3, ang3 + 1, step)
 
     # Create a meshgrid of all possible combinations
     phi1, theta, phi2 = np.meshgrid(phi1, theta, phi2, indexing='ij')
@@ -544,6 +547,17 @@ def find_orientation(measurements, params, num_guesses=20, tolerance=None):
             best_objective_value = result.fun
             best_result = result
 
+    # # deal with the gymbal lock case
+    # if np.isclose(best_result.x[1], 0.0, atol=1e-06):
+    #     phi1 = (best_result.x[0] + best_result.x[2]) % 360
+
+    #     if phi1 > 90:
+    #         best_result.x[0] = 90
+    #         best_result.x[2] = phi1 - 90
+    #     else:
+    #         best_result.x[0] = phi1
+    #         best_result.x[2] = 0
+
     print(f'Calculated orientation: {np.around(best_result.x, 0)}')
     return best_result
 
@@ -577,11 +591,34 @@ def find_orientation_diffevol(measurements, params, tolerance=0.01, cpus=1):
     return result
 
 
-def find_orientation_annealing():
-    pass
+def find_orientation_annealing(measurements, params):
+    """_summary_
+
+    Parameters
+    ----------
+    measurements : _type_
+        _description_
+    params : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    
+    bounds = [(0, 90), (0, 90), (0, 180)]
+
+    # Perform global optimization using dual annealing
+    result = dual_annealing(func=objective_function,
+                            bounds=bounds,
+                            args=(measurements, params))
+
+    print(f'Calculated Orientation: {np.around(result.x, 0)}')
+    return result
 
 
-def find_orientation_bruteforce(measurements, params, step=6):
+def find_orientation_bruteforce(measurements, params, step=3):
     """_summary_
 
     Parameters
@@ -591,7 +628,7 @@ def find_orientation_bruteforce(measurements, params, step=6):
     params : _type_
         _description_
     step : int, optional
-        _description_, by default 6
+        _description_, by default 3
 
     Returns
     -------
@@ -635,6 +672,6 @@ def find_nearest(df, values):
 if __name__ == '__main__':
     pass
 else:
-    print('module FTIR v.2024.3.04 imported')
+    print('module FTIR v.2024.3.07 imported')
 
 # End of file
