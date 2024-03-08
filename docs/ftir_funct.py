@@ -454,14 +454,14 @@ def explore_Euler_space(step=1, lower_bounds=(0, 0, 0), upper_bounds=(90, 90, 18
     ang1, ang2, ang3 = upper_bounds
 
     phi1 = np.arange(lang1, ang1 + 1, step)
-    theta = np.arange(lang2, ang2 + 1, step)
+    Phi = np.arange(lang2, ang2 + 1, step)
     phi2 = np.arange(lang3, ang3 + 1, step)
 
     # Create a meshgrid of all possible combinations
-    phi1, theta, phi2 = np.meshgrid(phi1, theta, phi2, indexing='ij')
+    phi1, Phi, phi2 = np.meshgrid(phi1, Phi, phi2, indexing='ij')
 
     # Stack the angles along the third axis to create the final array
-    array = np.stack((phi1, theta, phi2), axis=-1)
+    array = np.stack((phi1, Phi, phi2), axis=-1)
 
     # Reshape the array to size 3*n
     array = array.reshape(-1, 3)
