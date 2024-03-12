@@ -708,9 +708,83 @@ def find_nearest(df, values):
     return indexes
 
 
+def plot_crystal_axes(ax, r, name=None, offset=(0, 0, 0), scale=1):
+    """
+    This function customizes a matplotlib axis (`ax`) to visualize
+    crystal axes.
+
+    Parameters
+    ----------
+    ax : object
+        A matplotlib axis object to be modified.
+    r : _type_
+        A scipy.spatial.transform.Rotation object representing
+        the crystallographic rotation.
+    name : _type_, optional
+        A string specifying the name of the crystal structure
+        to be displayed in the center, by default None.
+    offset : tuple, optional
+        A tuple of three floats representing the offset for
+        the axes and label placement, by default (0, 0, 0).
+    scale : int, optional
+        A float value to scale the length of the plotted
+        axes, by default 1
+
+    Returns
+    -------
+         None. The function modifies the input axis object
+         (`ax`) in-place.
+    """
+    # Define a color list for crystallographic axes (colorblind-safe RGB)
+    colors = ("#FF6666", "#005533", "#1199EE")
+
+    # store the given offset location
+    loc = np.array([offset, offset])
+
+    # Loop through each axis (x, y, z) and its corresponding color
+    for i, (axis, c) in enumerate(zip((ax.xaxis, ax.yaxis, ax.zaxis), colors)):
+
+        axlabel = axis.axis_name # Get the name of the axis
+
+        # Set the label name and the color for labels, lines and ticks.
+        axis.set_label_text(axlabel)
+        axis.label.set_color(c)
+        axis.line.set_color(c)
+        axis.set_tick_params(colors=c)
+    
+        # Create, locate and orientate the line segments
+        line = np.zeros((2, 3))
+        line[1, i] = scale
+        line_rot = r.apply(line)    # rotate
+        line_plot = line_rot + loc  # translate
+
+        # plot line segments
+        ax.plot(line_plot[:, 0], line_plot[:, 1], line_plot[:, 2], c)    
+
+        # Calculate the position for the axis labels
+        text_loc = line[1] * 1.2
+        text_loc_rot = r.apply(text_loc)
+        text_plot = text_loc_rot + loc[0]
+
+        # plot the axis label text
+        ax.text(*text_plot, axlabel.upper(), color=c, va="center", ha="center")
+
+    # If a name is provided, add it to the center of the plot
+    ax.text(
+        *offset,
+        name,
+        color="k",
+        va="center",
+        ha="center",
+        bbox={"fc": "w", "alpha": 0.8, "boxstyle": "circle"},
+    )
+
+    return None
+
+
 if __name__ == '__main__':
     pass
 else:
-    print('module FTIR v.2024.3.07 imported')
+    print('module FTIR v.2024.3.12 imported')
 
 # End of file
