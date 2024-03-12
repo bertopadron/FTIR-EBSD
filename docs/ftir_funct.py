@@ -426,6 +426,45 @@ def rotate(coordinates, euler_ang, invert=False):
         return new_coordinates[:, 0], new_coordinates[:, 1], new_coordinates[:, 2]
     
 
+def calc_misorientation(euler1, euler2):
+    """Calculate the misorientation angle between two
+    (orthorhombic) crystals.
+
+    Parameters
+    ----------
+    euler1 : array_like (3,)
+        Euler angles representing the orientation of the first
+        crystal in degrees (Bunge convention).
+    euler2 : array_like (3,)
+        Euler angles representing the orientation of the second
+        crystal in degrees (Bunge convention).
+
+    Note
+    ----
+    This method assumes that the rotation matrices represent
+    proper rotations (i.e., rotations without reflection or
+    inversion).
+
+    Returns
+    -------
+    float
+        The misorientation angle between the two crystals in degrees.
+    """
+
+    # Convert Euler angles to rotation matrices
+    R1 = r.from_euler("zxz", euler1, degrees=True)
+    R2 = r.from_euler("zxz", euler2, degrees=True)
+
+    # calc rotation
+    rotation = R1.inv() * R2
+
+    # Get the magnitude(s) of the rotation(s): angle(s) in radians
+    misorientation_rad = rotation.magnitude()
+    #misorientation_rad = np.arccos((np.trace(rotation.as_matrix()) - 1) / 2)
+
+    return np.rad2deg(misorientation_rad)
+
+
 def explore_Euler_space(step=1, lower_bounds=(0, 0, 0), upper_bounds=(90, 90, 180)):
     """Returns a Numpy array with different combinations
     of Euler angles in degrees to explore the Euler space
