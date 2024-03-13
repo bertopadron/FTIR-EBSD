@@ -708,6 +708,52 @@ def find_nearest(df, values):
     return indexes
 
 
+def axis_angle_from_compact_axis_angle(rotvec, polar=False):
+    """Compute axis-angle from compact axis-angle representation.
+    Reimplemented from pytransform3d library
+
+
+    We usually assume active rotations.
+
+    Parameters
+    ----------
+    rotvec : array-like, shape (3,)
+        Axis of rotation and rotation angle: angle * (x, y, z).
+
+    Returns
+    -------
+    axis_angle : array-like, shape (4,)
+        Axis of rotation and rotation angle: (x, y, z, angle). The angle is
+        constrained to [0, pi].
+    custom axis_angle : array-like, shape (3,)
+        Axis of rotation and rotation angle: (azimuth, inclination, angle).
+        The angle is constrained to [0, pi]. The unit vector is in polar
+        coordinates.
+    """
+    # check input
+    rotvec = np.asarray(rotvec, dtype=np.float64)
+    if rotvec.ndim != 1 or rotvec.shape[0] != 3:
+        raise ValueError(
+            "Expected axis and angle in array with shape (3,), "
+            "got array-like object with shape %s" % (rotvec.shape,)
+        )
+
+    angle = np.linalg.norm(rotvec)
+
+    if angle == 0.0:
+        return np.array([1.0, 0.0, 0.0, 0.0])
+
+    axis = rotvec / angle
+    axis_angle = np.hstack((axis, (angle,)))
+
+    if polar:
+        x, y, z, _ = axis_angle
+        _, azimuth, polar = cart2sph(x, y, z)
+        return np.array([azimuth, polar, angle])
+    else:
+        return axis_angle
+
+
 def plot_crystal_axes(ax, r, name=None, offset=(0, 0, 0), scale=1):
     """
     This function customizes a matplotlib axis (`ax`) to visualize
@@ -785,6 +831,6 @@ def plot_crystal_axes(ax, r, name=None, offset=(0, 0, 0), scale=1):
 if __name__ == '__main__':
     pass
 else:
-    print('module FTIR v.2024.3.12 imported')
+    print('module FTIR v.2024.3.13 imported')
 
 # End of file
