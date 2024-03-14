@@ -427,8 +427,7 @@ def rotate(coordinates, euler_ang, invert=False):
     
 
 def calc_misorientation(euler1, euler2):
-    """Calculate the misorientation angle between two
-    (orthorhombic) crystals.
+    """Calculate the misorientation angle between two crystals.
 
     Parameters
     ----------
@@ -443,12 +442,19 @@ def calc_misorientation(euler1, euler2):
     ----
     This method assumes that the rotation matrices represent
     proper rotations (i.e., rotations without reflection or
-    inversion).
+    inversion). This is a general method and should work for
+    any crystal symmetry but for large misorientation angles
+    it will not give the lowest angle (i.e. disorientation)
+    but a misorientation angle as it does not take into
+    account the particular symmetry of the crystal. In
+    principle this is not a problem as this function is
+    designed to deal with small misorientation angles.
 
     Returns
     -------
     float
-        The misorientation angle between the two crystals in degrees.
+        The misorientation angle between the two crystals
+        in degrees.
     """
 
     # Convert Euler angles to rotation matrices
@@ -462,7 +468,7 @@ def calc_misorientation(euler1, euler2):
     misorientation_rad = rotation.magnitude()
     #misorientation_rad = np.arccos((np.trace(rotation.as_matrix()) - 1) / 2)
 
-    return np.rad2deg(misorientation_rad)
+    return np.around(np.rad2deg(misorientation_rad), 1)
 
 
 def explore_Euler_space(step=1, lower_bounds=(0, 0, 0), upper_bounds=(90, 90, 180)):
@@ -831,6 +837,6 @@ def plot_crystal_axes(ax, r, name=None, offset=(0, 0, 0), scale=1):
 if __name__ == '__main__':
     pass
 else:
-    print('module FTIR v.2024.3.13 imported')
+    print('module FTIR v.2024.3.14 imported')
 
 # End of file
