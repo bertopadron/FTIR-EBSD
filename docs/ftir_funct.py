@@ -546,7 +546,7 @@ def objective_function(euler_ang, measurements, params):
     return np.sum(np.abs(T_measured - T_theoretical))**2
 
 
-def find_orientation(measurements, params, num_guesses=20, tolerance=None):
+def find_orientation(measurements, params, num_guesses=20, silent=True, tolerance=None):
     """
     Given a set of points in 3D space, determine if they fall on the surface
     defined by the function T. If the points do not fall on the surface,
@@ -592,22 +592,14 @@ def find_orientation(measurements, params, num_guesses=20, tolerance=None):
             best_objective_value = result.fun
             best_result = result
 
-    # # deal with the gymbal lock case
-    # if np.isclose(best_result.x[1], 0.0, atol=1e-06):
-    #     phi1 = (best_result.x[0] + best_result.x[2]) % 360
-
-    #     if phi1 > 90:
-    #         best_result.x[0] = 90
-    #         best_result.x[2] = phi1 - 90
-    #     else:
-    #         best_result.x[0] = phi1
-    #         best_result.x[2] = 0
-
-    print(f'Calculated orientation: {np.around(best_result.x, 0)}')
-    return best_result
+    if silent:
+        return best_result
+    else:
+        print(f'Calculated Orientation: {np.around(best_result.x, 0)}')
+        return best_result
 
 
-def find_orientation_diffevol(measurements, params, tolerance=0.01, cpus=1):
+def find_orientation_diffevol(measurements, params, silent=True, tolerance=0.01, cpus=1):
     """_summary_
 
     http://en.wikipedia.org/wiki/Differential_evolution
@@ -632,11 +624,14 @@ def find_orientation_diffevol(measurements, params, tolerance=0.01, cpus=1):
                                     tol=tolerance,
                                     workers=cpus)
     
-    print(f'Calculated Orientation: {np.around(result.x, 0)}')
-    return result
+    if silent:
+        return result
+    else:
+        print(f'Calculated Orientation: {np.around(result.x, 0)}')
+        return result
 
 
-def find_orientation_annealing(measurements, params):
+def find_orientation_annealing(measurements, params, silent=True):
     """_summary_
 
     Parameters
@@ -659,8 +654,11 @@ def find_orientation_annealing(measurements, params):
                             bounds=bounds,
                             args=(measurements, params))
 
-    print(f'Calculated Orientation: {np.around(result.x, 0)}')
-    return result
+    if silent:
+        return result
+    else:
+        print(f'Calculated Orientation: {np.around(result.x, 0)}')
+        return result
 
 
 def find_orientation_bruteforce(measurements, params, step=3):
@@ -837,6 +835,6 @@ def plot_crystal_axes(ax, r, name=None, offset=(0, 0, 0), scale=1):
 if __name__ == '__main__':
     pass
 else:
-    print('module FTIR v.2024.3.14 imported')
+    print('module FTIR v.2024.3.18 imported')
 
 # End of file
