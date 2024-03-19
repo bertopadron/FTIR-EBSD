@@ -426,7 +426,7 @@ def rotate(coordinates, euler_ang, invert=False):
         return new_coordinates[:, 0], new_coordinates[:, 1], new_coordinates[:, 2]
     
 
-def calc_misorientation(euler1, euler2):
+def calc_misorientation(euler1, euler2, precision=3):
     """Calculate the misorientation angle between two crystals.
 
     Parameters
@@ -447,7 +447,7 @@ def calc_misorientation(euler1, euler2):
     it will not give the lowest angle (i.e. disorientation)
     but a misorientation angle as it does not take into
     account the particular symmetry of the crystal. In
-    principle this is not a problem as this function is
+    principle, this is not a problem as this function is
     designed to deal with small misorientation angles.
 
     Returns
@@ -468,7 +468,107 @@ def calc_misorientation(euler1, euler2):
     misorientation_rad = rotation.magnitude()
     #misorientation_rad = np.arccos((np.trace(rotation.as_matrix()) - 1) / 2)
 
-    return np.around(np.rad2deg(misorientation_rad), 1)
+    return np.around(np.rad2deg(misorientation_rad), precision)
+
+
+def symmetrise_orthorhombic(Euler_angles,
+                            input_unit='radians',
+                            output_unit='radians'):
+    """
+    Apply symmetry operations for an orthorhombic crystal
+    to estimate all the equivalent orientations.
+
+    Parameters:
+    -----------
+    Euler_angles : array_like (3,)
+        Euler angles (φ1, Φ, φ2) in degrees or radians.
+        Bunge convention
+    input_unit : str
+        Unit of the input angles ('degrees' or 'radians').
+        Default is 'radians'.
+    output_unit : str
+        Unit of the output angles ('degrees' or 'radians').
+        Default is 'radians'.
+
+    Returns:
+    --------
+        list: List of numpy arrays representing all
+        equivalent orientations in the specified output unit.
+    """
+    # Convert input angles to radians if necessary
+    if input_unit == 'degrees':
+        euler_angles = np.radians(Euler_angles)
+    else:
+        print("angles in radians assumed, otherwise use input_unit='degrees'")
+
+    # Extract Euler angles
+    phi1, Phi, phi2 = euler_angles
+
+    # Define symmetry operations (rotations of 180 degrees around each axis)
+    sym_rotations = [
+        (phi1, Phi, phi2),                           # identity
+        (np.pi + phi1, np.pi - Phi, np.pi - phi2),   # 180 Rotation around z-axis (φ1)
+        (phi1, Phi, np.pi + phi2),                   # 180 Rotation around x-axis (Φ)
+        (np.pi + phi1, np.pi - Phi, 2*np.pi - phi2)  # 180-degree rotation about the z-axis followed by a 180-degree rotation about the x-axis
+    ]
+
+    # Apply symmetry operations to the input Bunge angles
+    equivalent_orientations = []
+    for rotation in sym_rotations:
+        equivalent_orientations.append(rotation)
+
+        # Apply inversion operation (change the direction of the orientation vector)
+        equivalent_orientations.append((-rotation[0], -rotation[1], -rotation[2]))  # Inversion operation
+
+    # Convert output angles to degrees if necessary
+    if output_unit == 'degrees':
+        equivalent_orientations = [np.degrees(angles) for angles in equivalent_orientations]
+
+    return equivalent_orientations
+
+
+def calc_disorientation(euler1, euler2, all=False):
+    """Calculate the disorientation angle, i.e. minimum
+    misorientation angle between two orthorhombic crystals.
+
+    Parameters
+    ----------
+    euler1 : array_like (3,)
+        Euler angles representing the orientation of the
+        first crystal in degrees (Bunge convention).
+    euler2 : array_like (3,)
+        Euler angles representing the orientation of the
+        second crystal in degrees (Bunge convention).
+    all : bool, default False
+        if True, it returs all the misorientation angles
+
+    Returns
+    -------
+    float
+        The misorientation angle between the two crystals
+        in degrees.
+    """
+
+    # covert euler 1 to rotation matrix
+    R1 = r.from_euler("zxz", euler1, degrees=True)
+
+    # symmetrize 2nd orientation
+    equivalent_orientations = symmetrise_orthorhombic(
+        euler2, input_unit="degrees", output_unit="degrees"
+    )
+
+    misorientations = np.empty(len(equivalent_orientations))
+
+    for index, orientation in enumerate(equivalent_orientations):
+        R2 = r.from_euler("zxz", orientation, degrees=True)
+        rotation = R1.inv() * R2
+        misorientation_rad = rotation.magnitude()
+        misorientations[index] = misorientation_rad
+    
+    if all:
+        return np.around(np.rad2deg(misorientations), 3)
+    else:
+        return np.around(np.rad2deg(misorientations.min()), 3)
 
 
 def explore_Euler_space(step=1, lower_bounds=(0, 0, 0), upper_bounds=(90, 90, 180)):
@@ -835,6 +935,6 @@ def plot_crystal_axes(ax, r, name=None, offset=(0, 0, 0), scale=1):
 if __name__ == '__main__':
     pass
 else:
-    print('module FTIR v.2024.3.18 imported')
+    print('module FTIR v.2024.3.19 imported')
 
 # End of file
