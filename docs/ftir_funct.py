@@ -674,6 +674,9 @@ def find_orientation(measurements, params, num_guesses=20, silent=True, toleranc
     defined by the function T. If the points do not fall on the surface,
     apply a rotation to the points and check again until the points fall on
     the surface. Return the Euler angles that rotate the points to the surface.
+    This used a gradient-based method but using multiple initial guesses
+    chosen randomly and uniformly throughout Euler space.
+
 
     Parameters
     ----------
@@ -722,9 +725,12 @@ def find_orientation(measurements, params, num_guesses=20, silent=True, toleranc
 
 
 def find_orientation_diffevol(measurements, params, silent=True, tolerance=0.01, cpus=1):
-    """_summary_
+    """This is just a wrapper of the Scipy's differential_evolution
+    algorithm
 
     http://en.wikipedia.org/wiki/Differential_evolution
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.differential_evolution.html
+
 
     Parameters
     ----------
@@ -754,7 +760,8 @@ def find_orientation_diffevol(measurements, params, silent=True, tolerance=0.01,
 
 
 def find_orientation_annealing(measurements, params, silent=True):
-    """_summary_
+    """This is just a wrapper of the Scipy's dual_annealing
+    algorithm
 
     Parameters
     ----------
