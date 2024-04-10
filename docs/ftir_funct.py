@@ -32,66 +32,9 @@ from contourpy import contour_generator
 
 # Function definitions
 
-# reference frames and coordinates
-def Tvalues(trans, azimuth, polar):
-    """ Calculates the transmission value for any direction in
-    spherical coordinates using the equation (5) of Asimov et al.
-    (2006) for a especific wavelength ignoring the sample thickness
-    (i.e. assume thickness=1).
-
-    Parameters
-    ----------
-    trans : a tuple of size 3
-        tuple containeing the transmission values along a-axis (Ta),
-        b-axis (Tb), and c-axis (Tc). -> (Ta, Tb, Tc)
-    azimuth : int or float between 0 and 2*pi
-        azimuthal angle respect to the a-axis in radians
-    polar : int or float between 0 and pi
-        polar angle respect to the c-axis in radians, i.e. inclination
-
-    Returns
-    -------
-    numpy array
-        the calculated T values for any given orientation
-
-    Note
-    ----
-    Ta and Tb are interchanged with respect to Asimov's
-    so that Ta is aligned with the x-axis when shifted
-    to Cartesian coordinates.
-    """
-
-    # extract T values
-    Ta, Tb, Tc = trans
-
-    return Ta * np.cos(azimuth)**2 * np.sin(polar)**2 + \
-           Tb * np.sin(azimuth)**2 * np.sin(polar)**2 + \
-           Tc * np.cos(polar)**2
-
-
-def T_on_plane(trans, azimuth, polar):
-    """_summary_ Based on Sambridge et al.
-
-    Parameters
-    ----------
-    trans : _type_
-        _description_
-    azimuth : _type_
-        _description_
-    polar : _type_
-        _description_
-    """
-
-    # extract T values
-    Ta, Tb, Tc = trans
-
-    return 0.5 * \
-        (Ta * (np.cos(polar)**2 * np.cos(azimuth)**2 + np.sin(azimuth)**2) +
-         Tb * (np.cos(polar)**2 * np.sin(azimuth)**2 * np.cos(azimuth)**2) +
-         Tc * np.sin(polar)**2)
-
-
-
+# ============================================================================ #
+# REFERENCE FRAMES AND CHANGE OF COORDINATES                                   #
+# ============================================================================ #
 
 def sph2cart(r, azimuth, polar=np.deg2rad(90)):
     """ Convert from spherical/polar (magnitude, azimuth, polar) to
@@ -162,7 +105,7 @@ def cart2sph(x, y, z):
     return r, phi, theta
 
 
-def regular_S2_grid(n_squared=100, degrees=False):
+def regular_S2_grid(n_squared=100):
     """_summary_
 
     Parameters
@@ -266,13 +209,84 @@ def _set_epsilon(n):
         return 2.66
 
 
+# ============================================================================ #
+# FTIR EQUATIONS                                                               #
+# ============================================================================ #
+
+def Tvalues(trans, azimuth, polar):
+    """ Calculates the transmission value for any direction in
+    spherical coordinates using the equation (5) of Asimov et al.
+    (2006) for a especific wavelength ignoring the sample thickness
+    (i.e. assume thickness=1).
+
+    Parameters
+    ----------
+    trans : a tuple of size 3
+        tuple containeing the transmission values along a-axis (Ta),
+        b-axis (Tb), and c-axis (Tc). -> (Ta, Tb, Tc)
+    azimuth : int or float between 0 and 2*pi
+        azimuthal angle respect to the a-axis in radians
+    polar : int or float between 0 and pi
+        polar angle respect to the c-axis in radians, i.e. inclination
+
+    Returns
+    -------
+    numpy array
+        the calculated T values for any given orientation
+
+    Note
+    ----
+    Ta and Tb are interchanged with respect to Asimov's
+    so that Ta is aligned with the x-axis when shifted
+    to Cartesian coordinates.
+    """
+
+    # extract T values
+    Ta, Tb, Tc = trans
+
+    return Ta * np.cos(azimuth)**2 * np.sin(polar)**2 + \
+           Tb * np.sin(azimuth)**2 * np.sin(polar)**2 + \
+           Tc * np.cos(polar)**2
+
+
+def calc_unpol_absorbance(A_max, A_min):
+    return -np.log10((10**-A_max + 10**-A_min) / 2)
+
+
+def T_on_plane(trans, azimuth, polar):
+    """_summary_ Based on Sambridge et al.
+
+    Parameters
+    ----------
+    trans : _type_
+        _description_
+    azimuth : _type_
+        _description_
+    polar : _type_
+        _description_
+    """
+
+    # extract T values
+    Ta, Tb, Tc = trans
+
+    return 0.5 * (
+        Ta * (np.cos(polar) ** 2 * np.cos(azimuth) ** 2 + np.sin(azimuth) ** 2)
+        + Tb * (np.cos(polar) ** 2 * np.sin(azimuth) ** 2 * np.cos(azimuth) ** 2)
+        + Tc * np.sin(polar) ** 2
+    )
+
+
+# ============================================================================ #
+# EXTRACT ENVELOPE SECTIONS                                                    #
+# ============================================================================ #
+
 def extract_XY_section(x, y, z):
     """ It uses the matplolib contour function to get the values
     and spherical coordinates of T values within the XY plane.
     The contour function uses the marching squares algorithm
     to fing the intersection at a defined level.
 
-    Caveat: THIS IS SLOW!
+    Caveat: THIS IS SLOW! USE ONLY FOR CREATING PLOTS
 
     Parameters
     ----------
@@ -357,49 +371,9 @@ def extract_XY_section_fast(x, y, z):
     return df
 
 
-def extract_XY_section_fast2(x, y, z):
-    """ It uses ContourPy to get the values and spherical coordinates
-    of T values within the XY plane.
-
-    Parameters
-    ----------
-    x : _type_
-        _description_
-    y : _type_
-        _description_
-    z : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
-
-    # estimate the contour at z=0 (i.e. XY plane)
-    sections = contour_generator(x, y, z)
-
-    # get the vertice coordinates of the contour z=0 (array-like)
-    coordinates = sections.lines(0)[0]
-
-    # get vector lengths (i.e. T values within the XY plane)
-    T = np.linalg.norm(coordinates, axis=1)
-
-    # get the angle of the vector (in radians)
-    angles = np.arctan2(coordinates[:, 1], coordinates[:, 0])
-
-    # Convert angles to the range 0-2π (0-360 degrees)
-    angles = np.degrees(angles) % 360
-
-    df = pd.DataFrame({
-        'x': coordinates[:, 0],
-        'y': coordinates[:, 1],
-        'T': T,
-        'angles': angles
-    })
-
-    return df
-
+# ============================================================================ #
+# CRYSTALLOGRAPHY                                                              #
+# ============================================================================ #
 
 def rotate(coordinates, euler_ang, invert=False):
     """ Rotate points in 3D cartesian space using the Bunge convention
@@ -446,7 +420,7 @@ def rotate(coordinates, euler_ang, invert=False):
         return new_coordinates[:, :, 0], new_coordinates[:, :, 1], new_coordinates[:, :, 2]
     else:
         return new_coordinates[:, 0], new_coordinates[:, 1], new_coordinates[:, 2]
-    
+
 
 def calc_misorientation(euler1, euler2, precision=3):
     """Calculate the misorientation angle between two crystals.
@@ -593,7 +567,9 @@ def calc_disorientation(euler1, euler2, all=False):
         return np.around(np.rad2deg(misorientations.min()), 3)
 
 
-def explore_Euler_space(step=1, lower_bounds=(0, 0, 0), upper_bounds=(90, 90, 180)):
+def explore_Euler_space(step=1,
+                        lower_bounds=(0, 0, 0),
+                        upper_bounds=(90, 90, 180)):
     """Returns a Numpy array with different combinations
     of Euler angles in degrees to explore the Euler space
     based on a defined step size. It assumes a orthorhombic
@@ -636,9 +612,131 @@ def explore_Euler_space(step=1, lower_bounds=(0, 0, 0), upper_bounds=(90, 90, 18
     return array
 
 
-def calc_unpol_absorbance(A_max, A_min):
-    return -np.log10((10**-A_max + 10**-A_min) / 2)
+def compact_axis_angle_to_axis_angle(rotvec, spherical=False):
+    """Compute axis-angle from compact axis-angle representation.
+    Reimplemented from pytransform3d library
 
+    We assume active rotations.
+
+    Parameters
+    ----------
+    rotvec : array-like, shape (3,)
+        Axis of rotation and rotation angle: angle * (x, y, z).
+    spherical : boolean
+        if True, axis is reported on spherical coordinates
+        instead of cartesian.
+
+    Returns
+    -------
+    axis_angle : array-like, shape (4,)
+        Axis of rotation and rotation angle: (x, y, z, angle). The angle is
+        constrained to [0, pi].
+    custom axis_angle : array-like, shape (3,)
+        Axis of rotation and rotation angle: (azimuth, inclination, angle).
+        The angle is constrained to [0, pi]. The unit vector is in polar
+        coordinates.
+    """
+    # check input
+    rotvec = np.asarray(rotvec, dtype=np.float64)
+    if rotvec.ndim != 1 or rotvec.shape[0] != 3:
+        raise ValueError(
+            "Expected axis and angle in array with shape (3,), "
+            "got array-like object with shape %s" % (rotvec.shape,)
+        )
+
+    angle = np.linalg.norm(rotvec)
+
+    if angle == 0.0:
+        return np.array([1.0, 0.0, 0.0, 0.0])
+
+    axis = rotvec / angle
+    axis_angle = np.hstack((axis, (angle,)))
+
+    if spherical:
+        x, y, z, _ = axis_angle
+        _, azimuth, polar = cart2sph(x, y, z)
+        return np.array([azimuth, polar, angle])
+    else:
+        return axis_angle
+
+
+def plot_crystal_axes(ax, r, name=None, offset=(0, 0, 0), scale=1):
+    """
+    This function customizes a matplotlib axis (`ax`) to visualize
+    crystal axes.
+
+    Parameters
+    ----------
+    ax : object
+        A matplotlib axis object to be modified.
+    r : _type_
+        A scipy.spatial.transform.Rotation object representing
+        the crystallographic rotation.
+    name : _type_, optional
+        A string specifying the name of the crystal structure
+        to be displayed in the center, by default None.
+    offset : tuple, optional
+        A tuple of three floats representing the offset for
+        the axes and label placement, by default (0, 0, 0).
+    scale : int, optional
+        A float value to scale the length of the plotted
+        axes, by default 1
+
+    Returns
+    -------
+         None. The function modifies the input axis object
+         (`ax`) in-place.
+    """
+    # Define a color list for crystallographic axes (colorblind-safe RGB)
+    colors = ("#FF6666", "#005533", "#1199EE")
+
+    # store the given offset location
+    loc = np.array([offset, offset])
+
+    # Loop through each axis (x, y, z) and its corresponding color
+    for i, (axis, c) in enumerate(zip((ax.xaxis, ax.yaxis, ax.zaxis), colors)):
+
+        axlabel = axis.axis_name # Get the name of the axis
+
+        # Set the label name and the color for labels, lines and ticks.
+        axis.set_label_text(axlabel)
+        axis.label.set_color(c)
+        axis.line.set_color(c)
+        axis.set_tick_params(colors=c)
+    
+        # Create, locate and orientate the line segments
+        line = np.zeros((2, 3))
+        line[1, i] = scale
+        line_rot = r.apply(line)    # rotate
+        line_plot = line_rot + loc  # translate
+
+        # plot line segments
+        ax.plot(line_plot[:, 0], line_plot[:, 1], line_plot[:, 2], c)    
+
+        # Calculate the position for the axis labels
+        text_loc = line[1] * 1.2
+        text_loc_rot = r.apply(text_loc)
+        text_plot = text_loc_rot + loc[0]
+
+        # plot the axis label text
+        ax.text(*text_plot, axlabel.upper(), color=c, va="center", ha="center")
+
+    # If a name is provided, add it to the center of the plot
+    ax.text(
+        *offset,
+        name,
+        color="k",
+        va="center",
+        ha="center",
+        bbox={"fc": "w", "alpha": 0.8, "boxstyle": "circle"},
+    )
+
+    return None
+
+
+# ============================================================================ #
+# MINIMIZATION                                                                 #
+# ============================================================================ #
 
 def objective_function(euler_ang, measurements, params):
     """
@@ -689,12 +787,6 @@ def find_orientation(measurements, params, num_guesses=20, silent=True, toleranc
         Number of initial guesses to try.
     tolerance : float or None
         tolerance for determining if a point is on the surface
-
-    Returns
-    -------
-    tuple of size 3
-        tuple containing the Euler angles in degrees for rotating
-        the points to the surface
     """
 
     best_result = None
@@ -841,129 +933,9 @@ def find_nearest(df, values):
     return indexes
 
 
-def axis_angle_from_compact_axis_angle(rotvec, polar=False):
-    """Compute axis-angle from compact axis-angle representation.
-    Reimplemented from pytransform3d library
-
-
-    We usually assume active rotations.
-
-    Parameters
-    ----------
-    rotvec : array-like, shape (3,)
-        Axis of rotation and rotation angle: angle * (x, y, z).
-
-    Returns
-    -------
-    axis_angle : array-like, shape (4,)
-        Axis of rotation and rotation angle: (x, y, z, angle). The angle is
-        constrained to [0, pi].
-    custom axis_angle : array-like, shape (3,)
-        Axis of rotation and rotation angle: (azimuth, inclination, angle).
-        The angle is constrained to [0, pi]. The unit vector is in polar
-        coordinates.
-    """
-    # check input
-    rotvec = np.asarray(rotvec, dtype=np.float64)
-    if rotvec.ndim != 1 or rotvec.shape[0] != 3:
-        raise ValueError(
-            "Expected axis and angle in array with shape (3,), "
-            "got array-like object with shape %s" % (rotvec.shape,)
-        )
-
-    angle = np.linalg.norm(rotvec)
-
-    if angle == 0.0:
-        return np.array([1.0, 0.0, 0.0, 0.0])
-
-    axis = rotvec / angle
-    axis_angle = np.hstack((axis, (angle,)))
-
-    if polar:
-        x, y, z, _ = axis_angle
-        _, azimuth, polar = cart2sph(x, y, z)
-        return np.array([azimuth, polar, angle])
-    else:
-        return axis_angle
-
-
-def plot_crystal_axes(ax, r, name=None, offset=(0, 0, 0), scale=1):
-    """
-    This function customizes a matplotlib axis (`ax`) to visualize
-    crystal axes.
-
-    Parameters
-    ----------
-    ax : object
-        A matplotlib axis object to be modified.
-    r : _type_
-        A scipy.spatial.transform.Rotation object representing
-        the crystallographic rotation.
-    name : _type_, optional
-        A string specifying the name of the crystal structure
-        to be displayed in the center, by default None.
-    offset : tuple, optional
-        A tuple of three floats representing the offset for
-        the axes and label placement, by default (0, 0, 0).
-    scale : int, optional
-        A float value to scale the length of the plotted
-        axes, by default 1
-
-    Returns
-    -------
-         None. The function modifies the input axis object
-         (`ax`) in-place.
-    """
-    # Define a color list for crystallographic axes (colorblind-safe RGB)
-    colors = ("#FF6666", "#005533", "#1199EE")
-
-    # store the given offset location
-    loc = np.array([offset, offset])
-
-    # Loop through each axis (x, y, z) and its corresponding color
-    for i, (axis, c) in enumerate(zip((ax.xaxis, ax.yaxis, ax.zaxis), colors)):
-
-        axlabel = axis.axis_name # Get the name of the axis
-
-        # Set the label name and the color for labels, lines and ticks.
-        axis.set_label_text(axlabel)
-        axis.label.set_color(c)
-        axis.line.set_color(c)
-        axis.set_tick_params(colors=c)
-    
-        # Create, locate and orientate the line segments
-        line = np.zeros((2, 3))
-        line[1, i] = scale
-        line_rot = r.apply(line)    # rotate
-        line_plot = line_rot + loc  # translate
-
-        # plot line segments
-        ax.plot(line_plot[:, 0], line_plot[:, 1], line_plot[:, 2], c)    
-
-        # Calculate the position for the axis labels
-        text_loc = line[1] * 1.2
-        text_loc_rot = r.apply(text_loc)
-        text_plot = text_loc_rot + loc[0]
-
-        # plot the axis label text
-        ax.text(*text_plot, axlabel.upper(), color=c, va="center", ha="center")
-
-    # If a name is provided, add it to the center of the plot
-    ax.text(
-        *offset,
-        name,
-        color="k",
-        va="center",
-        ha="center",
-        bbox={"fc": "w", "alpha": 0.8, "boxstyle": "circle"},
-    )
-
-    return None
-
-
 if __name__ == '__main__':
     pass
 else:
-    print('module FTIR v.2024.3.19 imported')
+    print('module FTIR v.2024.4.10 imported')
 
 # End of file
