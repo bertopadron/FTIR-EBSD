@@ -854,11 +854,11 @@ def find_orientation(measurements, params, num_guesses=20, silent=True, toleranc
     if silent:
         return best_result
     else:
-        print(f'Calculated Orientation: {np.around(best_result.x, 0)}')
+        print(f'Calculated Orientation: {np.around(best_result.x, 1)}')
         return best_result
 
 
-def find_orientation_diffevol(measurements, params, silent=True, tolerance=0.01, cpus=1):
+def find_orientation_diffevol(measurements, params, silent=True, **kwargs):
     """This is just a wrapper of the Scipy's differential_evolution
     algorithm
 
@@ -872,10 +872,7 @@ def find_orientation_diffevol(measurements, params, silent=True, tolerance=0.01,
         _description_
     params : _type_
         _description_
-    tolerance : float, optional
-        _description_, by default 0.01
     """
-    
 
     bounds = [(0, 90), (0, 90), (0, 180)]
 
@@ -883,17 +880,16 @@ def find_orientation_diffevol(measurements, params, silent=True, tolerance=0.01,
     result = differential_evolution(func=objective_function, 
                                     bounds=bounds,
                                     args=(measurements, params),
-                                    tol=tolerance,
-                                    workers=cpus)
+                                    **kwargs)
     
     if silent:
         return result
     else:
-        print(f'Calculated Orientation: {np.around(result.x, 0)}')
+        print(f'Calculated Orientation: {np.around(result.x, 1)}')
         return result
 
 
-def find_orientation_annealing(measurements, params, silent=True):
+def find_orientation_annealing(measurements, params, silent=True, **kwargs):
     """This is just a wrapper of the Scipy's dual_annealing
     algorithm
 
@@ -915,12 +911,13 @@ def find_orientation_annealing(measurements, params, silent=True):
     # Perform global optimization using dual annealing
     result = dual_annealing(func=objective_function,
                             bounds=bounds,
-                            args=(measurements, params))
+                            args=(measurements, params),
+                            **kwargs)
 
     if silent:
         return result
     else:
-        print(f'Calculated Orientation: {np.around(result.x, 0)}')
+        print(f'Calculated Orientation: {np.around(result.x, 1)}')
         return result
 
 
