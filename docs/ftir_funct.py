@@ -419,7 +419,7 @@ def extract_XY_section_fast2(x, y, z):
 
 def rotate(coordinates, euler_ang, invert=False):
     """ Rotate points in 3D cartesian space using the Bunge convention
-    in degrees with intrinsic rotation. This is just a wrapper for the
+    in degrees with extrinsic rotation. This is just a wrapper for the
     r.from_euler() Scipy method for convenience
 
     Parameters
@@ -448,7 +448,7 @@ def rotate(coordinates, euler_ang, invert=False):
     else:
         print('check array dimension!')
 
-    # define a rotation in euler space (Bunge) for intrinsic rotations
+    # define a rotation in euler space (Bunge) for extrinsic rotations
     rotation = r.from_euler('zxz', [euler_ang[0], euler_ang[1], euler_ang[2]],
                             degrees=True)
     
